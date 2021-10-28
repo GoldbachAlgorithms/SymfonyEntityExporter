@@ -23,7 +23,7 @@
         "phpoffice/phpspreadsheet": "^1.18"
     },
     "scripts": {
-        "pre-install-cmd": [
+        "post-create-project-cmd": [
             "@env",
             "@create"
         ],
