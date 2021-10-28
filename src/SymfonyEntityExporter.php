@@ -2,11 +2,16 @@
 
 namespace GoldbachAlgorithms\SymfonyEntityExporter;
 
+use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\Response;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Option\EA;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
@@ -195,6 +200,8 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
         $filename,
         $delimiter
     ) {
+
+        
         $entities = new ArrayCollection($query);
       
         $this->dataExportTest($entities, $dataExport);
@@ -231,6 +238,7 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
         $filename,
         $delimiter
     ): StreamedResponse {
+
         $response = new StreamedResponse();
 
         $spreadsheet = new Spreadsheet();
@@ -263,6 +271,7 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
                 
                 foreach ($columns as $column => $callback) {
                     try {
+                        
                         $value = $callback;
 
                         if (is_callable($callback)) {
@@ -281,6 +290,7 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
                 $entities->next();
             }
 
+
             $writer =  new Csv($spreadsheet);
             $writer->setUseBOM(true);
             $writer->setDelimiter($delimiter);
@@ -296,7 +306,58 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
         return $response;
     }
 
-    
+    public function getEasyAdminQuery(
+        Request $request,  
+        object $filterFactory,
+        object $controller,
+        array $aditionalParameters = []        
+    ): array
+    {
 
-    
+        $context = $this->_getEasyAdminRefererContext($request);
+        $searchDto = $controller->adminContextFactory->getSearchDto($request, $context->getCrud());
+        $fields = FieldCollection::new($controller->configureFields(Crud::PAGE_INDEX));
+        $filters = $filterFactory
+                    ->create(
+                        $context->getCrud()->getFiltersConfig(), 
+                        $fields, 
+                        $context->getEntity()
+                    );
+
+        $data = $controller->createIndexQueryBuilder(
+            $searchDto,
+            $context->getEntity(),
+            $fields,
+            $filters
+        );
+
+        if (!is_null($aditionalParameters)) {
+            foreach ($aditionalParameters as $key => $p) {
+                $data = $data
+                        ->andWhere("entity.$key = :$key")
+                        ->setParameter("$key", $p);
+            }
+        }
+
+        $data = $data
+                    ->getQuery()
+                    ->getResult();
+        
+        return $data;
+    }
+
+    public function _getEasyAdminRefererContext(Request $request)
+    {
+        \parse_str(\parse_url($request->query->get(EA::REFERRER))[EA::QUERY], $referrerQuery);
+
+        if (array_key_exists(EA::FILTERS, $referrerQuery)) {
+            $request->query->set(EA::FILTERS, $referrerQuery[EA::FILTERS]);
+        }
+
+        if (array_key_exists(EA::QUERY, $referrerQuery)) {
+            $request->query->set(EA::QUERY, $referrerQuery[EA::QUERY]);
+        }
+
+        return $request->attributes->get(EA::CONTEXT_REQUEST_ATTRIBUTE);
+    }
 }
