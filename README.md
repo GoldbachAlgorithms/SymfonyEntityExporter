@@ -39,14 +39,26 @@ You can create an export template following the example in [src/EntityDataExport
 The Entity Exporter is compatible with the Easy Admin Bundle, so it is possible to use a request within a Controller on the page and perform data export.
 
 ```php
+use EasyCorp\Bundle\EasyAdminBundle\Factory\AdminContextFactory;
 use GoldbachAlgorithms\SymfonyEntityExporter\SymfonyEntityExporter;
+
+# Inject the AdminContextFactory and define public
+
+/** @var AdminContextFactory  */
+public $adminContextFactory;
+
+public function __construct(AdminContextFactory $adminContextFactory)
+{
+   $this->adminContextFactory = $adminContextFactory;
+}
 
 # Instantiate a new Entity Exporter
 $entityExporter = new SymfonyEntityExporter;
 
-#
+# Get the FilterFactory into Controller
 $filterFactory = $this->get(FilterFactory::class);
 
+# Use the Entity Exporter builder to EasyAdmin
 $data = $entityExporter->getEasyAdminQuery(
             $request,
             $filterFactory,
