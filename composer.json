@@ -1,0 +1,41 @@
+{
+    "name": "goldbach-algorithms/symfony-entity-exporter",
+    "description": "Symfony Entity Exporter",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "GoldbachAlgorithms\\SymfonyEntityExporter\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Goldbach07",
+            "email": "gustavoalves.a7@gmail.com"
+        }
+    ],
+    "require": {
+        "ext-gd": "*",
+        "phpoffice/phpspreadsheet": "^1.18"
+    },
+    "require-dev": {
+        "ext-gd": "*",
+        "phpoffice/phpspreadsheet": "^1.18"
+    },
+    "scripts": {
+        "post-package-install": [
+            "@env",
+            "@create"
+        ],
+        "env": [
+          "echo '\n# Goldbach Algorithms' >> \\.env ",
+          "echo 'ENTITY_DIRECTORY=\"App\\Entity\"' >> \\.env ",
+          "echo 'TRANSITORY_MEMORY=1GB' >> \\.env ",
+          "echo '# Goldbach Algorithms' >> \\.env "
+        ],
+        "create": [
+          "mkdir -p ../../../src/DataExport",
+          "cp src/EntityDataExport.php ../../../src/DataExport"
+        ]
+    }
+}
