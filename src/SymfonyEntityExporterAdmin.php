@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 class SymfonyEntityExporterAdmin extends SymfonyEntityExporterValidator{
 
     const TRANSITORY_MEMORY = 'TRANSITORY_MEMORY';
+    const DEFAULT_TRANSITORY_MEMORY = '1GB';
     const ENV_NOT_DEFINED = "is not defined into .env";
     const __toString = "__toString";
     const __getId = "getId";
@@ -16,7 +17,10 @@ class SymfonyEntityExporterAdmin extends SymfonyEntityExporterValidator{
 
     public function transitoryMemory()
     {
-        $transitoryMemory = $this->env(self::TRANSITORY_MEMORY);
+        $transitoryMemory = self::DEFAULT_TRANSITORY_MEMORY;
+        if (isset($_ENV[self::TRANSITORY_MEMORY]) && !empty($_ENV[self::TRANSITORY_MEMORY])) {
+            $transitoryMemory = $_ENV(self::TRANSITORY_MEMORY);
+        }        
         ini_set('memory_limit', $transitoryMemory);
     }
 

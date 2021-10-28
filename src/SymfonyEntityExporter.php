@@ -127,6 +127,8 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
                     }
                 }
 
+                $entityPath = str_replace("\\\\","\\", $entityPath);
+                // return $entityPath;
                 if (class_exists($entityPath)) {
                     $data = $method->invoke($class);
 

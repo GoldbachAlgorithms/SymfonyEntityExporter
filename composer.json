@@ -30,8 +30,8 @@
           "echo '# Goldbach Algorithms' >> \\.env "
         ],
         "create": [
-          "mkdir -p ../../../src/DataExport",
-          "cp src/EntityDataExport.php ../../../src/DataExport"
+          "mkdir -p App/src/DataExport",
+          "cp src/EntityDataExport.php /App/src/DataExport"
         ],
         "post-install-cmd": [
             "@env",
