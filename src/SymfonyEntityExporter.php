@@ -459,9 +459,6 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
                 $entities->next();
             }
 
-            return $$value;
-
-
             if ($extension == 'csv') {
                 $writer =  new Csv($spreadsheet);
                 $writer->setUseBOM(true);
@@ -475,7 +472,7 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
             
             $writer->save('php://output');
         });
-        dd($valuex);
+
         $response->setStatusCode(200);
         $response->headers->set('Content-Type', self::EXPORTER_HEADER[$extension]);
         $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
