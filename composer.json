@@ -25,37 +25,5 @@
         "ext-gd": "*",
         "phpoffice/phpspreadsheet": "^1.18",
         "sasedev/mpdf-bundle": "^2.0.0"
-    },
-    "scripts": {
-        "test": [
-            "mkdir -p App/src/DataExportTest"
-        ],
-        "install":[
-            "mkdir -p App/src/DataExportInstall"
-        ],
-        "auto-scripts":[
-            "mkdir -p App/src/DataExportAutoScript"
-        ],
-        "update": [
-            "mkdir -p App/src/DataExportUpdate"
-        ],
-        "env": [
-          "echo '\n# Goldbach Algorithms' >> \\.env ",
-          "echo 'ENTITY_DIRECTORY=\"App\\Entity\"' >> \\.env ",
-          "echo 'TRANSITORY_MEMORY=1GB' >> \\.env ",
-          "echo '# Goldbach Algorithms' >> \\.env "
-        ],
-        "create": [
-          "mkdir -p App/src/DataExport",
-          "cp src/ExampleDataExport.php /App/src/DataExport"
-        ],
-        "post-install-cmd": [
-            "@env",
-            "@create"
-        ],
-        "post-update-cmd": [
-            "@env",
-            "@create"
-        ]
     }
 }
