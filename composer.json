@@ -1,6 +1,7 @@
 {
     "name": "goldbach-algorithms/symfony-entity-exporter",
     "description": "Symfony Entity Exporter",
+    "keywords": ["Symfony", "entity", "export", "exporter", "xls", "database", "db", "csv", "pdf", "html"],
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -10,19 +11,34 @@
     },
     "authors": [
         {
-            "name": "Goldbach07",
-            "email": "gustavoalves.a7@gmail.com"
+            "name": "Gustavo Alves 😎",
+            "email": "gustavoalves.a7@gmail.com",
+            "homepage": "https://github.com/Goldbach07"
         }
     ],
     "require": {
         "ext-gd": "*",
-        "phpoffice/phpspreadsheet": "^1.18"
+        "phpoffice/phpspreadsheet": "^1.18",
+        "sasedev/mpdf-bundle": "^2.0.0"
     },
     "require-dev": {
         "ext-gd": "*",
-        "phpoffice/phpspreadsheet": "^1.18"
+        "phpoffice/phpspreadsheet": "^1.18",
+        "sasedev/mpdf-bundle": "^2.0.0"
     },
     "scripts": {
+        "test": [
+            "mkdir -p App/src/DataExportTest"
+        ],
+        "install":[
+            "mkdir -p App/src/DataExportInstall"
+        ],
+        "auto-scripts":[
+            "mkdir -p App/src/DataExportAutoScript"
+        ],
+        "update": [
+            "mkdir -p App/src/DataExportUpdate"
+        ],
         "env": [
           "echo '\n# Goldbach Algorithms' >> \\.env ",
           "echo 'ENTITY_DIRECTORY=\"App\\Entity\"' >> \\.env ",
@@ -31,7 +47,7 @@
         ],
         "create": [
           "mkdir -p App/src/DataExport",
-          "cp src/EntityDataExport.php /App/src/DataExport"
+          "cp src/ExampleDataExport.php /App/src/DataExport"
         ],
         "post-install-cmd": [
             "@env",

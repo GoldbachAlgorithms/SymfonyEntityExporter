@@ -10,6 +10,8 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Option\EA;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
+use PhpOffice\PhpSpreadsheet\Writer\Xls;
+use Sasedev\MpdfBundle\Factory\MpdfFactory;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -34,7 +36,13 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
     const DEFAULT_TITLE = 'NoTitled';
     const DEFAULT_FILE = 'File';
     const DEFAULT_DELIMITER = ';';
-
+    const SUPPORTED_EXTENSIONS = ['csv','xls'];
+    const NOT_SUPPORTED_EXTENSION = 'Extension not supported.';
+    const EXPORTER_HEADER = [
+        'csv' => 'text/csv',
+        'xls' => 'application/vnd.ms-excel',
+    ];
+    
     public function csv(
         $query,
         $class,
@@ -43,14 +51,136 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
         $filename = self::DEFAULT_FILE,
         $delimiter = self::DEFAULT_DELIMITER
     ) {
-
         $this->transitoryMemory();
 
         $query = $this->validate($query);
 
         $dataExport = $this->dataExport($class, $exporter);
 
-        return $this->execute($query, $dataExport, $title, $filename, $delimiter);
+        $extension = 'csv';
+
+        return $this->execute($query, $dataExport, $title, $filename, $extension, $delimiter);
+    }
+
+    public function xls(
+        $query,
+        $class,
+        $exporter = null,
+        $title = self::DEFAULT_TITLE,
+        $filename = self::DEFAULT_FILE
+    ) {
+        $this->transitoryMemory();
+
+        $query = $this->validate($query);
+
+        $dataExport = $this->dataExport($class, $exporter);
+
+        $extension = 'xls';
+
+        return $this->execute($query, $dataExport, $title, $filename, $extension);
+    }
+
+    public function pdfByHtml(
+        string $content,
+        string $filename = 'PDF - Goldbach Algorithms',
+        string $headerHtml = null,
+        string $footerHtml = null,
+        string $orientation = 'P',
+        string $marginHeader = '10',
+        string $marginFooter = '10',
+        string $topMargin = '30',
+        string $format = 'A4',
+        string $mode = 'utf-8'
+    ) {
+        $MpdfFactory = new MpdfFactory('/tmp');
+
+        $mPdf = $MpdfFactory->createMpdfObject(
+            [
+                'mode' => $mode,
+                'format' => $format,
+                'margin_header' => $marginHeader,
+                'margin_footer' => $marginFooter,
+                'orientation' => $orientation
+            ]
+        );
+
+        $mPdf
+            ->SetTopMargin($topMargin);
+
+        if ($headerHtml) {
+            $mPdf
+                ->SetHTMLHeader($headerHtml);
+        }
+
+        if ($footerHtml) {
+            $mPdf
+                ->SetFooter($footerHtml);
+        }
+
+        $mPdf
+            ->WriteHTML($content);
+        
+        return $MpdfFactory
+                    ->createDownloadResponse($mPdf, $filename.".pdf");
+    }
+
+    public function pdf(
+        $query,
+        $class,
+        $exporter = null,
+        string $filename = 'PDF - Goldbach Algorithms',
+        string $headerHtml = null,
+        string $footerHtml = null,
+        string $orientation = 'L', # P (Portrait) or L (Landscape)
+        string $marginHeader = '10',
+        string $marginFooter = '10',
+        string $topMargin = '30',
+        string $format = 'A4',
+        string $mode = 'utf-8'
+    ) {
+        $this->transitoryMemory();
+
+        $query = $this->validate($query);
+
+        $dataExport = $this->dataExport($class, $exporter);
+
+        $html = $this->arrayToHtml($query, $dataExport);
+        
+        return $this
+                ->pdfByHtml(
+                    $html,
+                    $filename,
+                    $headerHtml,
+                    $footerHtml,
+                    $orientation,
+                    $marginHeader,
+                    $marginFooter,
+                    $topMargin,
+                    $format,
+                    $mode
+                );
+    }
+
+    public function arrayToHtml($query, $dataExport)
+    {
+        $values = $this->getArrayByQuery($query, $dataExport);
+
+        $bases = $values[0];
+        $table = "<table border='1' cellpadding='2'>";
+        $table .= "<tr>";
+        foreach ($bases as $key => $base) {
+            $table .= "<td><b>".$key."</b></td>";
+        }
+        $table .= "</tr>";
+        for ($j = 0; $j < count($values); $j++) {
+            $table .= "<tr>";
+            foreach ($values[$j] as $v) {
+                $table .= "<td>".$v."</td>";
+            }
+            $table .= "</tr>";
+        }
+        $table .= "</table>";
+        return $table;
     }
 
     public function dataExport($class, $dataExportClass)
@@ -63,8 +193,9 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
                 $entityFields
             );
         } else {
-            $__dataExport = new $dataExportClass;
-            $dataExport = $__dataExport->getFields();
+            $__dataExport = $this->validateDataExport($dataExportClass, $class);
+            
+            $dataExport = $__dataExport->getColumns();
         }
 
         return $dataExport;
@@ -124,16 +255,15 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
                 $entityPath = $method->getReturnType();
 
                 if (empty($entityPath)) {
-                    if(isset($_ENV['ENTITY_DIRECTORY']) && !empty($_ENV['ENTITY_DIRECTORY'])){
+                    if (isset($_ENV['ENTITY_DIRECTORY']) && !empty($_ENV['ENTITY_DIRECTORY'])) {
                         $entityPath = $_ENV['ENTITY_DIRECTORY'] . "\\" . $field;
-                    }
-                    else{
+                    } else {
                         $entityPath = self::ENTITIES_PATH . "\\" . $field;
                     }
                 }
 
-                $entityPath = str_replace("\\\\","\\", $entityPath);
-                // return $entityPath;
+                $entityPath = str_replace("\\\\", "\\", $entityPath);
+                
                 if (class_exists($entityPath)) {
                     $data = $method->invoke($class);
 
@@ -198,24 +328,30 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
         $dataExport,
         $title,
         $filename,
-        $delimiter
+        $extension,
+        $delimiter = null
     ) {
-
-        
         $entities = new ArrayCollection($query);
       
         $this->dataExportTest($entities, $dataExport);
 
-        try {
-            return $this->exportCsv(
-                $entities,
-                $dataExport,
-                $title,
-                $filename,
-                $delimiter
+        if (in_array($extension, self::SUPPORTED_EXTENSIONS)) {
+            try {
+                return $this->export(
+                    $entities,
+                    $dataExport,
+                    $title,
+                    $filename,
+                    $extension,
+                    $delimiter
+                );
+            } catch (\Exception $e) {
+                return $e->getMessage();
+            }
+        } else {
+            throw new BadRequestException(
+                "GoldbachAlgorithmsError: ". self::NOT_SUPPORTED_EXTENSION
             );
-        } catch (\Exception $e) {
-            return $e->getMessage();
         }
     }
 
@@ -231,19 +367,53 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
         }
     }
 
-    public function exportCsv(
+    public function getArrayByQuery($query, $columns)
+    {
+        $entities = new ArrayCollection($query);
+
+        $headers = array_keys($columns);
+        
+        $i = 0;
+
+        while ($entity = $entities->current()) {
+            $values[$i] = [];
+
+            $h = 0;
+            
+            foreach ($columns as $column => $callback) {
+                try {
+                    $value = $callback;
+
+                    if (is_callable($callback)) {
+                        $value = $callback($entity);
+                    }
+
+                    $values[$i][$headers[$h]] = $value;
+                } catch (\Exception $e) {
+                }
+                $h++;
+            }
+
+            $entities->next();
+            $i++;
+        }
+
+        return $values;
+    }
+
+    public function export(
         $entities,
         $columns,
         $title,
         $filename,
+        $extension,
         $delimiter
     ): StreamedResponse {
-
         $response = new StreamedResponse();
 
         $spreadsheet = new Spreadsheet();
 
-        $response->setCallback(function () use ($entities, $columns, $spreadsheet, $title, $delimiter) {
+        $valuex = $response->setCallback(function () use ($entities, $columns, $spreadsheet, $title, $extension, $delimiter) {
             $sheet = $spreadsheet->getActiveSheet();
 
             $sheet->setTitle($title);
@@ -271,7 +441,6 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
                 
                 foreach ($columns as $column => $callback) {
                     try {
-                        
                         $value = $callback;
 
                         if (is_callable($callback)) {
@@ -290,37 +459,44 @@ class SymfonyEntityExporter extends SymfonyEntityExporterAdmin
                 $entities->next();
             }
 
+            return $$value;
 
-            $writer =  new Csv($spreadsheet);
-            $writer->setUseBOM(true);
-            $writer->setDelimiter($delimiter);
-            $writer->setSheetIndex(0);
+
+            if ($extension == 'csv') {
+                $writer =  new Csv($spreadsheet);
+                $writer->setUseBOM(true);
+                $writer->setDelimiter($delimiter);
+                $writer->setSheetIndex(0);
+            }
+            
+            if ($extension == 'xls') {
+                $writer = new Xls($spreadsheet);
+            }
+            
             $writer->save('php://output');
         });
-
+        dd($valuex);
         $response->setStatusCode(200);
-        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Type', self::EXPORTER_HEADER[$extension]);
         $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
-        $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '.csv"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '.' . $extension . '"');
 
         return $response;
     }
 
     public function getEasyAdminQuery(
-        Request $request,  
+        Request $request,
         object $filterFactory,
         object $controller,
-        array $aditionalParameters = []        
-    ): array
-    {
-
+        array $aditionalParameters = []
+    ): array {
         $context = $this->_getEasyAdminRefererContext($request);
         $searchDto = $controller->adminContextFactory->getSearchDto($request, $context->getCrud());
         $fields = FieldCollection::new($controller->configureFields(Crud::PAGE_INDEX));
         $filters = $filterFactory
                     ->create(
-                        $context->getCrud()->getFiltersConfig(), 
-                        $fields, 
+                        $context->getCrud()->getFiltersConfig(),
+                        $fields,
                         $context->getEntity()
                     );
 
