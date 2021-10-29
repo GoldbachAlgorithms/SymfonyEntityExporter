@@ -19,7 +19,7 @@ Make the settings below according to your project's needs within your .env file
 If you have changed the paron directory for entities in your project, you must set the ENTITY_PATH variable within your .env file to indicate the new directory.
 
 #### TRANSITORY_MEMORY
-As an option it is also possible to define within the .env file of your project a value for the variable TRANSITORY_MEMORY, which will change the php memory limit during the execution of the export to avoid crashes.
+As an option it is also possible to define within the .env file of your project a value for the variable TRANSITORY_MEMORY, which will change the php memory limit during the execution of the export to avoid crashes. The default value is 1GB.
 
 
 ## Usage
