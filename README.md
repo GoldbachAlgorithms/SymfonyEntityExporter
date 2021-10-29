@@ -1,5 +1,10 @@
 # Symfony Entity Exporter
 
+[<img src="https://badgen.net/badge/Powered%20by/Goldbach/yellow" />](https://github.com/Goldbach07/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[<img src="https://badgen.net/badge/Developed%20for/Symfony/:black" />](https://symfony.com/)
+
+
 Goldbach Algorithms Symfony Entity Exporter (fondly nicknamed Entity Exporter) is a library developed for the Symfony framework with the objective of exporting information from the database in a simple way.
 
 **Compatible output extensions: *CSV*, *XLS* and *PDF***
