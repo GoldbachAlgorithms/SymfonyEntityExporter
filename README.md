@@ -161,3 +161,5 @@ return $response;
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
+
+Copyright © 2021 [Goldbach Algorithms](https://github.com/GoldbachAlgorithms/SymfonyEntityExporter/blob/main/LICENSE)
