@@ -120,7 +120,7 @@ You can create an export template following the example in [src/ExampleDataExpor
 ## EasyAdminBundle
 The Entity Exporter is compatible with the Easy Admin Bundle, so it is possible to use a request within a Controller on the page and perform data export.
 
-**See the *.xls* export example***
+**See the *.xls* export example**
 
 ```php
 use EasyCorp\Bundle\EasyAdminBundle\Factory\AdminContextFactory;
