@@ -19,8 +19,8 @@ class SymfonyEntityExporterAdmin extends SymfonyEntityExporterValidator{
     {
         $transitoryMemory = self::DEFAULT_TRANSITORY_MEMORY;
         if (isset($_ENV[self::TRANSITORY_MEMORY]) && !empty($_ENV[self::TRANSITORY_MEMORY])) {
-            $transitoryMemory = $_ENV(self::TRANSITORY_MEMORY);
-        }        
+            $transitoryMemory = $_ENV[self::TRANSITORY_MEMORY];
+        }
         ini_set('memory_limit', $transitoryMemory);
     }
 
